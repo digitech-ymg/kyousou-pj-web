@@ -43,9 +43,11 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       //   width: window.innerWidth > 1200 ? 1200 : window.innerWidth - 50,
       //   height: window.innerWidth > 1200 ? 900 : Math.max(600, window.innerHeight - 100),
       // });
+      console.log('window.innerWidth:', window.innerWidth);
+      console.log('window.innerHeight:', window.innerHeight);
       setDimensions({
         width: window.innerWidth,
-        height: window.innerHeight,
+        height: window.innerHeight - 80,
       });
     };
 
@@ -349,7 +351,7 @@ export default function Graph({ areas, projects, users }: GraphProps) {
     // ユーザーのアバター画像
     userNodes
       .append('image')
-      .attr('xlink:href', () => '/img/user-round.svg')
+      .attr('xlink:href', (d) => d.image)
       .attr('x', (d) => {
         const usersInProject = users.filter((u) => u.projectId === d.projectId);
         const isFirstUser = usersInProject[0].id === d.id;
@@ -448,15 +450,10 @@ export default function Graph({ areas, projects, users }: GraphProps) {
   }, [dimensions, areas, projects, users]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-slate-50 p-4 overflow-hidden relative">
-      <h1 className="absolute top-4 left-4 text-4xl font-bold text-blue-800">
-        デジテック for YAMAGUCHI 共創PJ
-      </h1>
-      <svg
-        ref={svgRef}
-        className="w-full h-full"
-        style={{ maxWidth: '100%', maxHeight: '100%' }}
-      ></svg>
-    </div>
+    <svg
+      ref={svgRef}
+      className="w-full h-full"
+      style={{ maxWidth: '100%', maxHeight: '100%' }}
+    ></svg>
   );
 }
