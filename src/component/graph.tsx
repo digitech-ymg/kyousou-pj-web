@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { User, Connection, SampleData, AreaCenter, ProjectCenter } from '../types/graph';
 
 // サンプルデータ - 3つのエリア、各エリアに2つのプロジェクト、各プロジェクトに2〜5人のユーザー
-const sampleData = {
+const sampleData: SampleData = {
   areas: [
     { id: 1, name: '周南市和田' },
     { id: 2, name: '山口市阿東' },
@@ -34,11 +35,12 @@ const sampleData = {
     { id: 11, name: 'yoshida', image: '/api/placeholder/60/60', projectId: 4 },
     { id: 12, name: 'userX', image: '/api/placeholder/60/60', projectId: 4 },
   ],
+  connections: [],
 };
 
 // 同一プロジェクト内のユーザーを数珠繋ぎにする接続リストを生成
-const generateConnectionsByProject = () => {
-  const connections = [];
+const generateConnectionsByProject = (): Connection[] => {
+  const connections: Connection[] = [];
   sampleData.projects.forEach((project) => {
     const projectUsers = sampleData.users.filter((user) => user.projectId === project.id);
     for (let i = 0; i < projectUsers.length; i++) {
@@ -56,7 +58,7 @@ const generateConnectionsByProject = () => {
 sampleData.connections = generateConnectionsByProject();
 
 export default function Graph() {
-  const svgRef = useRef(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export default function Graph() {
       .attr('viewBox', [0, 0, dimensions.width, dimensions.height]);
 
     // エリアの中心位置を計算
-    const areaCenters = {};
+    const areaCenters: { [key: number]: AreaCenter } = {};
     const areaRadiusX = dimensions.width * 0.25; // 横方向の半径を少し小さく
     const areaRadiusY = dimensions.height * 0.25; // 縦方向の半径を少し小さく
 
@@ -103,7 +105,7 @@ export default function Graph() {
     });
 
     // プロジェクトごとのユーザー数をカウント
-    const projectUserCounts = {};
+    const projectUserCounts: { [key: number]: number } = {};
     sampleData.users.forEach((user) => {
       if (!projectUserCounts[user.projectId]) {
         projectUserCounts[user.projectId] = 0;
@@ -112,9 +114,9 @@ export default function Graph() {
     });
 
     // プロジェクトの中心位置を計算（エリア中心からの距離を1.5倍に）
-    const projectCenters = {};
+    const projectCenters: { [key: number]: ProjectCenter } = {};
     const baseProjectRadius = dimensions.width * 0.06; // 基本サイズ
-    const projectRadii = {}; // プロジェクトごとに大きさを保存
+    const projectRadii: { [key: number]: number } = {}; // プロジェクトごとに大きさを保存
 
     sampleData.projects.forEach((project) => {
       const areaCenter = areaCenters[project.areaId];
@@ -238,7 +240,8 @@ export default function Graph() {
           .text(d.name);
 
         // テキストのバウンディングボックスを取得
-        const bbox = text.node().getBBox();
+        const bbox = text.node()?.getBBox();
+        if (!bbox) return;
 
         // 下線を追加
         g.append('line')
@@ -246,7 +249,7 @@ export default function Graph() {
           .attr('y1', bbox.y + bbox.height + 5)
           .attr('x2', bbox.x + bbox.width)
           .attr('y2', bbox.y + bbox.height + 5)
-          .attr('stroke', (d) => {
+          .attr('stroke', () => {
             const project = sampleData.projects.find((p) => p.areaId === d.id);
             return project ? project.color : '#334155';
           })
@@ -300,12 +303,13 @@ export default function Graph() {
     // ユーザーの初期位置を計算
     const userData = sampleData.users.map((user) => {
       const project = sampleData.projects.find((p) => p.id === user.projectId);
+      if (!project) return user;
+
       const projectCenter = projectCenters[user.projectId];
       const projectRadius = projectRadii[user.projectId];
       const usersInProject = sampleData.users.filter((u) => u.projectId === user.projectId);
       const userIndex = usersInProject.findIndex((u) => u.id === user.id);
 
-      // プロジェクトの周りに均等に配置 + ランダム性を追加
       const angle = (userIndex * 2 * Math.PI) / usersInProject.length + Math.random() * 0.3;
       const distance = projectRadius * 1.0 + Math.random() * projectRadius * 0.3;
 
@@ -322,9 +326,9 @@ export default function Graph() {
       .enter()
       .append('line')
       .attr('class', 'link')
-      .attr('stroke', (d) => {
+      .attr('stroke', (d: Connection) => {
         const sourceUser = userData.find((user) => user.id === d.source);
-        return sourceUser ? sourceUser.projectColor : '#94a3b8';
+        return sourceUser?.projectColor || '#94a3b8';
       })
       .attr('stroke-opacity', 0.5)
       .attr('stroke-width', 1.5);
@@ -355,19 +359,19 @@ export default function Graph() {
     // ユーザーのアバター画像の背景
     userNodes
       .append('circle')
-      .attr('r', (d) => {
+      .attr('r', (d: User) => {
         const usersInProject = sampleData.users.filter((u) => u.projectId === d.projectId);
         const isFirstUser = usersInProject[0].id === d.id;
         return isFirstUser ? 30 : 24; // 先頭ユーザーは25px、それ以外は22px
       })
       .attr('fill', 'white')
-      .attr('stroke', (d) => d.projectColor)
+      .attr('stroke', (d: User) => d.projectColor || '#94a3b8')
       .attr('stroke-width', 2);
 
     // ユーザーのアバター画像
     userNodes
       .append('image')
-      .attr('xlink:href', (d) => 'https://avatar.iran.liara.run/public')
+      .attr('xlink:href', () => '/img/user-round.svg')
       .attr('x', (d) => {
         const usersInProject = sampleData.users.filter((u) => u.projectId === d.projectId);
         const isFirstUser = usersInProject[0].id === d.id;
@@ -393,10 +397,10 @@ export default function Graph() {
     // ユーザー名を表示
     userNodes
       .append('text')
-      .attr('dy', 35)
+      .attr('dy', 40)
       .attr('text-anchor', 'middle')
       .attr('fill', '#475569')
-      .attr('font-size', '12px')
+      .attr('font-size', '16px')
       .text((d) => d.name);
 
     // ノードの浮遊アニメーション
@@ -404,7 +408,9 @@ export default function Graph() {
       userNodes
         .transition()
         .duration(5000)
-        .attr('transform', (d) => {
+        .attr('transform', (d: User) => {
+          if (d.x === undefined || d.y === undefined) return `translate(0, 0)`;
+
           // プロジェクトを中心とした軌道上を浮遊するような動き
           const projectCenter = projectCenters[d.projectId];
           const radius = Math.sqrt(
@@ -434,10 +440,22 @@ export default function Graph() {
       links
         .transition()
         .duration(5000)
-        .attr('x1', (d) => userData.find((user) => user.id === d.source).x)
-        .attr('y1', (d) => userData.find((user) => user.id === d.source).y)
-        .attr('x2', (d) => userData.find((user) => user.id === d.target).x)
-        .attr('y2', (d) => userData.find((user) => user.id === d.target).y);
+        .attr('x1', (d: Connection) => {
+          const sourceUser = userData.find((user) => user.id === d.source);
+          return sourceUser?.x || 0;
+        })
+        .attr('y1', (d: Connection) => {
+          const sourceUser = userData.find((user) => user.id === d.source);
+          return sourceUser?.y || 0;
+        })
+        .attr('x2', (d: Connection) => {
+          const targetUser = userData.find((user) => user.id === d.target);
+          return targetUser?.x || 0;
+        })
+        .attr('y2', (d: Connection) => {
+          const targetUser = userData.find((user) => user.id === d.target);
+          return targetUser?.y || 0;
+        });
     }
 
     // アニメーションを開始
@@ -445,10 +463,10 @@ export default function Graph() {
 
     // コネクションの初期位置を設定
     links
-      .attr('x1', (d) => userData.find((user) => user.id === d.source).x)
-      .attr('y1', (d) => userData.find((user) => user.id === d.source).y)
-      .attr('x2', (d) => userData.find((user) => user.id === d.target).x)
-      .attr('y2', (d) => userData.find((user) => user.id === d.target).y);
+      .attr('x1', (d: Connection) => userData.find((user) => user.id === d.source)?.x || 0)
+      .attr('y1', (d: Connection) => userData.find((user) => user.id === d.source)?.y || 0)
+      .attr('x2', (d: Connection) => userData.find((user) => user.id === d.target)?.x || 0)
+      .attr('y2', (d: Connection) => userData.find((user) => user.id === d.target)?.y || 0);
   }, [dimensions]);
 
   return (
