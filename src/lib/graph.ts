@@ -148,7 +148,7 @@ export function generateGraphData(): { areas: Area[]; projects: Project[]; users
           const userData = {
             id: index + 1,
             name: member['名前'],
-            image: '/img/user-round.svg',
+            image: './img/user-round.svg',
             projectId: project.id,
           };
           // console.log('Generated user:', userData);
