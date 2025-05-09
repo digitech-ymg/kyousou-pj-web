@@ -8,6 +8,8 @@ interface ExtendedUser extends User {
   x?: number;
   y?: number;
   projectColor?: string;
+  baseX?: number; // 初期位置のX座標
+  baseY?: number; // 初期位置のY座標
 }
 
 interface GraphProps {
@@ -37,12 +39,8 @@ export default function Graph({ areas, projects, users }: GraphProps) {
   const [dimensions, setDimensions] = useState({ width: 1000, height: 800 });
 
   useEffect(() => {
-    // ウィンドウサイズに応じてグラフサイズを調整
+    // ウィンドウサイズに応じてグラフサイズを調整（上位のh1の高さを除く）
     const updateDimensions = () => {
-      // setDimensions({
-      //   width: window.innerWidth > 1200 ? 1200 : window.innerWidth - 50,
-      //   height: window.innerWidth > 1200 ? 900 : Math.max(600, window.innerHeight - 100),
-      // });
       console.log('window.innerWidth:', window.innerWidth);
       console.log('window.innerHeight:', window.innerHeight);
       setDimensions({
@@ -278,7 +276,7 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       .text((d) => `(${projectUserCounts[d.id] || 0}人)`);
 
     // ユーザーの初期位置を計算
-    const userData = users.map((user) => {
+    const userData: ExtendedUser[] = users.map((user) => {
       const project = projects.find((p) => p.id === user.projectId);
       if (!project) return user as ExtendedUser;
 
@@ -293,7 +291,14 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       const x = projectCenter.x + Math.cos(angle) * distance;
       const y = projectCenter.y + Math.sin(angle) * distance;
 
-      return { ...user, x, y, projectColor: project.color } as ExtendedUser;
+      return {
+        ...user,
+        x,
+        y,
+        baseX: x, // 初期位置を保存
+        baseY: y, // 初期位置を保存
+        projectColor: project.color,
+      } as ExtendedUser;
     });
 
     // 接続データを生成
@@ -387,30 +392,38 @@ export default function Graph({ areas, projects, users }: GraphProps) {
     function floatAnimation() {
       userNodes
         .transition()
-        .duration(5000)
-        .attr('transform', (d: User) => {
-          if (d.x === undefined || d.y === undefined) return `translate(0, 0)`;
+        .duration(3000)
+        .ease(d3.easeQuadInOut)
+        .attr('transform', (d: ExtendedUser) => {
+          if (
+            d.x === undefined ||
+            d.y === undefined ||
+            d.baseX === undefined ||
+            d.baseY === undefined
+          ) {
+            return `translate(0, 0)`;
+          }
 
-          // プロジェクトを中心とした軌道上を浮遊するような動き
-          const projectCenter = projectCenters[d.projectId];
-          const radius = Math.sqrt(
-            Math.pow(d.x - projectCenter.x, 2) + Math.pow(d.y - projectCenter.y, 2),
-          );
-          const currentAngle = Math.atan2(d.y - projectCenter.y, d.x - projectCenter.x);
+          // 初期位置からの最大移動距離（プロジェクトの半径の40%）
+          const maxDistance = projectRadii[d.projectId] * 0.4;
 
-          // 移動量を2倍に
-          const newAngle = currentAngle + (Math.random() * 0.1 - 0.05);
-
-          // 軌道半径も少し変動させる（制限付き）
-          const minRadius = projectRadii[d.projectId] * 1.2; // 最小半径（プロジェクト半径の1.2倍）
-          const maxRadius = projectRadii[d.projectId] * 2.0; // 最大半径（プロジェクト半径の2.0倍）
-          const newRadius = Math.min(
-            Math.max(radius * (1 + (Math.random() * 0.12 - 0.06)), minRadius),
-            maxRadius,
+          // 現在の位置から初期位置までの距離を計算
+          const currentDistance = Math.sqrt(
+            Math.pow(d.x - d.baseX, 2) + Math.pow(d.y - d.baseY, 2),
           );
 
-          d.x = projectCenter.x + Math.cos(newAngle) * newRadius;
-          d.y = projectCenter.y + Math.sin(newAngle) * newRadius;
+          // 初期位置からの距離が最大距離を超えている場合は、初期位置に戻る方向に移動
+          if (currentDistance > maxDistance) {
+            const angle = Math.atan2(d.baseY - d.y, d.baseX - d.x);
+            d.x = d.baseX + Math.cos(angle) * maxDistance * 0.8;
+            d.y = d.baseY + Math.sin(angle) * maxDistance * 0.8;
+          } else {
+            // ランダムな方向に少し移動
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * maxDistance * 0.3;
+            d.x = d.baseX + Math.cos(angle) * distance;
+            d.y = d.baseY + Math.sin(angle) * distance;
+          }
 
           return `translate(${d.x}, ${d.y})`;
         })
@@ -419,7 +432,8 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       // コネクションの更新
       links
         .transition()
-        .duration(5000)
+        .duration(3000)
+        .ease(d3.easeQuadInOut)
         .attr('x1', (d: Connection) => {
           const sourceUser = userData.find((user) => user.id === d.source);
           return sourceUser?.x || 0;
@@ -438,8 +452,26 @@ export default function Graph({ areas, projects, users }: GraphProps) {
         });
     }
 
-    // アニメーションを開始
-    floatAnimation();
+    // 各ユーザーのアニメーション開始タイミングをランダムに設定
+    userData.forEach((user) => {
+      const randomDelay = Math.random() * 3000; // 0-2秒のランダムな遅延
+      setTimeout(() => {
+        const userNode = d3
+          .select(svgRef.current)
+          .selectAll<SVGGElement, ExtendedUser>('.user-node')
+          .filter((d) => d.id === user.id);
+
+        userNode
+          .transition()
+          .duration(3000)
+          .ease(d3.easeQuadInOut)
+          .attr('transform', (d) => {
+            if (d.x === undefined || d.y === undefined) return `translate(0, 0)`;
+            return `translate(${d.x}, ${d.y})`;
+          })
+          .on('end', floatAnimation);
+      }, randomDelay);
+    });
 
     // コネクションの初期位置を設定
     links
