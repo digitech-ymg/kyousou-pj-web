@@ -1,12 +1,18 @@
 ﻿index,名前,市町,リーダー度,スキル,フライデー参加,参加PJ
-1,ウチダさん,山口市,0,Canva,未参加,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
+1,ウチダさん,山口市,0,,未参加,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
 2,サイキさん,山口市,0,Kintone,未参加,阿東送迎kintone管理 (https://www.notion.so/kintone-1d42c5f0710f80479ce4e75de3dc2890?pvs=21)
-3,ナスカワさん,山口市,2,"Canva, UI/UXデザイン, adobe",参加中,"和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21), 和田動画制作 (https://www.notion.so/1e32c5f0710f80a88b97d5359e87d9c8?pvs=21)"
-4,ハガさん,山口市,0,"Kintone, プログラミング",参加中,阿東送迎kintone管理 (https://www.notion.so/kintone-1d42c5f0710f80479ce4e75de3dc2890?pvs=21)
-5,フクダさん,山口市,0,"オープンデータ, 地図",参加中,阿東送迎kintone管理 (https://www.notion.so/kintone-1d42c5f0710f80479ce4e75de3dc2890?pvs=21)
-6,モリさん,周南市,0,"Canva, adobe",参加中,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
+3,ナスカワさん,山口市,2,"Canva, UI/UXデザイン, ダヴィンチリゾルブ",参加中,"和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21), 和田動画制作 (https://www.notion.so/1e32c5f0710f80a88b97d5359e87d9c8?pvs=21)"
+4,ハガさん,山口市,0,"Kintone, プログラミング",参加中,"阿東送迎kintone管理 (https://www.notion.so/kintone-1d42c5f0710f80479ce4e75de3dc2890?pvs=21), 阿東移動販売kintone管理 (https://www.notion.so/kintone-1ed2c5f0710f80d1bf7ceeb5f0fedbf5?pvs=21)"
+5,フクダさん,山口市,0,"オープンデータ, 地図",参加中,"阿東送迎kintone管理 (https://www.notion.so/kintone-1d42c5f0710f80479ce4e75de3dc2890?pvs=21), 阿東移動販売kintone管理 (https://www.notion.so/kintone-1ed2c5f0710f80d1bf7ceeb5f0fedbf5?pvs=21)"
+6,モリさん,周南市,0,,参加中,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
 7,ヨシダさん,周南市,0,生成AI,参加中,防府資料生成AI活用 (https://www.notion.so/AI-1d42c5f0710f8095a4edf31ddc589f73?pvs=21)
 8,ヨシトミさん,山口市,1,Kintone,参加中,"阿東送迎kintone管理 (https://www.notion.so/kintone-1d42c5f0710f80479ce4e75de3dc2890?pvs=21), 阿東移動販売kintone管理 (https://www.notion.so/kintone-1ed2c5f0710f80d1bf7ceeb5f0fedbf5?pvs=21)"
-9,ヨシノさん,山口市,0,"Canva, UI/UXデザイン, adobe",参加中,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
-10,ワカサさん,山口市,0,"Canva, adobe",参加中,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
-11,ワギさん,宇部市,0,"Canva, adobe",未参加,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
+9,ヨシノさん,山口市,0,"Canva, UI/UXデザイン",参加中,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
+10,ワカサさん,山口市,0,,参加中,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
+11,ワギさん,宇部市,0,,未参加,和田チラシCanva制作 (https://www.notion.so/Canva-1d42c5f0710f800aaaaff3c99c6bb461?pvs=21)
+12,マツウラさん,防府市,0,生成AI,未参加,防府資料生成AI活用 (https://www.notion.so/AI-1d42c5f0710f8095a4edf31ddc589f73?pvs=21)
+13,カワノさん,防府市,0,,参加中,"阿東送迎kintone管理 (https://www.notion.so/kintone-1d42c5f0710f80479ce4e75de3dc2890?pvs=21), 阿東移動販売kintone管理 (https://www.notion.so/kintone-1ed2c5f0710f80d1bf7ceeb5f0fedbf5?pvs=21)"
+14,キョウイさん,防府市,0,,未参加,防府資料生成AI活用 (https://www.notion.so/AI-1d42c5f0710f8095a4edf31ddc589f73?pvs=21)
+15,ヤマノさん,防府市,0,,未参加,防府資料生成AI活用 (https://www.notion.so/AI-1d42c5f0710f8095a4edf31ddc589f73?pvs=21)
+16,シマムラさん,宇部市,0,ダヴィンチリゾルブ,未参加,和田動画制作 (https://www.notion.so/1e32c5f0710f80a88b97d5359e87d9c8?pvs=21)
+17,カキヌマさん,山口市,0,,未参加,防府資料生成AI活用 (https://www.notion.so/AI-1d42c5f0710f8095a4edf31ddc589f73?pvs=21)

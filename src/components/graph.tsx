@@ -10,6 +10,7 @@ interface ExtendedUser extends User {
   projectColor?: string;
   baseX?: number; // 初期位置のX座標
   baseY?: number; // 初期位置のY座標
+  uniqueId?: string; // プロジェクト毎のユニークID
 }
 
 interface GraphProps {
@@ -26,8 +27,8 @@ const generateConnectionsByProject = (users: User[], projects: Project[]): Conne
     for (let i = 0; i < projectUsers.length; i++) {
       const nextIndex = (i + 1) % projectUsers.length;
       connections.push({
-        source: projectUsers[i].id,
-        target: projectUsers[nextIndex].id,
+        source: `${projectUsers[i].id}-${project.id}`, // プロジェクト毎のユニークID
+        target: `${projectUsers[nextIndex].id}-${project.id}`, // プロジェクト毎のユニークID
       });
     }
   });
@@ -298,6 +299,7 @@ export default function Graph({ areas, projects, users }: GraphProps) {
         baseX: x, // 初期位置を保存
         baseY: y, // 初期位置を保存
         projectColor: project.color,
+        uniqueId: `${user.id}-${user.projectId}`, // プロジェクト毎のユニークID
       } as ExtendedUser;
     });
 
@@ -312,7 +314,7 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       .append('line')
       .attr('class', 'link')
       .attr('stroke', (d: Connection) => {
-        const sourceUser = userData.find((user) => user.id === d.source);
+        const sourceUser = userData.find((user) => user.uniqueId === d.source);
         return sourceUser?.projectColor || '#94a3b8';
       })
       .attr('stroke-opacity', 0.5)
@@ -333,7 +335,7 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       .data(userData)
       .enter()
       .append('clipPath')
-      .attr('id', (d) => `clip-${d.id}`)
+      .attr('id', (d) => `clip-${d.uniqueId}`)
       .append('circle')
       .attr('r', (d) => {
         const usersInProject = users.filter((u) => u.projectId === d.projectId);
@@ -344,13 +346,13 @@ export default function Graph({ areas, projects, users }: GraphProps) {
     // ユーザーのアバター画像の背景
     userNodes
       .append('circle')
-      .attr('r', (d: User) => {
+      .attr('r', (d: ExtendedUser) => {
         const usersInProject = users.filter((u) => u.projectId === d.projectId);
         const isFirstUser = usersInProject[0].id === d.id;
         return isFirstUser ? 30 : 24; // 先頭ユーザーは25px、それ以外は22px
       })
       .attr('fill', 'white')
-      .attr('stroke', (d: User) => d.projectColor || '#94a3b8')
+      .attr('stroke', (d: ExtendedUser) => d.projectColor || '#94a3b8')
       .attr('stroke-width', 2);
 
     // ユーザーのアバター画像
@@ -377,7 +379,7 @@ export default function Graph({ areas, projects, users }: GraphProps) {
         const isFirstUser = usersInProject[0].id === d.id;
         return isFirstUser ? 50 : 40;
       })
-      .attr('clip-path', (d) => `url(#clip-${d.id})`);
+      .attr('clip-path', (d) => `url(#clip-${d.uniqueId})`);
 
     // ユーザー名を表示
     userNodes
@@ -435,19 +437,19 @@ export default function Graph({ areas, projects, users }: GraphProps) {
         .duration(3000)
         .ease(d3.easeQuadInOut)
         .attr('x1', (d: Connection) => {
-          const sourceUser = userData.find((user) => user.id === d.source);
+          const sourceUser = userData.find((user) => user.uniqueId === d.source);
           return sourceUser?.x || 0;
         })
         .attr('y1', (d: Connection) => {
-          const sourceUser = userData.find((user) => user.id === d.source);
+          const sourceUser = userData.find((user) => user.uniqueId === d.source);
           return sourceUser?.y || 0;
         })
         .attr('x2', (d: Connection) => {
-          const targetUser = userData.find((user) => user.id === d.target);
+          const targetUser = userData.find((user) => user.uniqueId === d.target);
           return targetUser?.x || 0;
         })
         .attr('y2', (d: Connection) => {
-          const targetUser = userData.find((user) => user.id === d.target);
+          const targetUser = userData.find((user) => user.uniqueId === d.target);
           return targetUser?.y || 0;
         });
     }
@@ -459,7 +461,7 @@ export default function Graph({ areas, projects, users }: GraphProps) {
         const userNode = d3
           .select(svgRef.current)
           .selectAll<SVGGElement, ExtendedUser>('.user-node')
-          .filter((d) => d.id === user.id);
+          .filter((d) => d.uniqueId === user.uniqueId);
 
         userNode
           .transition()
@@ -475,10 +477,10 @@ export default function Graph({ areas, projects, users }: GraphProps) {
 
     // コネクションの初期位置を設定
     links
-      .attr('x1', (d: Connection) => userData.find((user) => user.id === d.source)?.x || 0)
-      .attr('y1', (d: Connection) => userData.find((user) => user.id === d.source)?.y || 0)
-      .attr('x2', (d: Connection) => userData.find((user) => user.id === d.target)?.x || 0)
-      .attr('y2', (d: Connection) => userData.find((user) => user.id === d.target)?.y || 0);
+      .attr('x1', (d: Connection) => userData.find((user) => user.uniqueId === d.source)?.x || 0)
+      .attr('y1', (d: Connection) => userData.find((user) => user.uniqueId === d.source)?.y || 0)
+      .attr('x2', (d: Connection) => userData.find((user) => user.uniqueId === d.target)?.x || 0)
+      .attr('y2', (d: Connection) => userData.find((user) => user.uniqueId === d.target)?.y || 0);
   }, [dimensions, areas, projects, users]);
 
   return (

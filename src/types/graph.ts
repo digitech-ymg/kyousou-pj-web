@@ -22,8 +22,8 @@ export interface User {
 }
 
 export interface Connection {
-  source: number;
-  target: number;
+  source: string;
+  target: string;
 }
 
 export interface SampleData {
