@@ -68,16 +68,43 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       .attr('height', dimensions.height)
       .attr('viewBox', [0, 0, dimensions.width, dimensions.height]);
 
-    // エリアの中心位置を計算
+    // エリアごとのプロジェクト数をカウント
+    const areaProjectCounts: { [key: number]: number } = {};
+    areas.forEach((area) => {
+      areaProjectCounts[area.id] = projects.filter((p) => p.areaId === area.id).length;
+    });
+
+    // エリアサイズをプロジェクト数に応じて計算
+    const getAreaRadius = (projectCount: number) => {
+      const baseRadiusX = dimensions.width * 0.15;
+      const baseRadiusY = dimensions.height * 0.15;
+      const sizeFactor = Math.max(0.8, Math.min(1.5, 0.8 + (projectCount - 1) * 0.2));
+      return {
+        x: baseRadiusX * sizeFactor,
+        y: baseRadiusY * sizeFactor,
+      };
+    };
+
+    // エリアの中心位置を計算（プロジェクト数に応じて間隔も調整）
     const areaCenters: { [key: number]: AreaCenter } = {};
-    const areaRadiusX = dimensions.width * 0.25; // 横方向の半径を少し小さく
-    const areaRadiusY = dimensions.height * 0.25; // 縦方向の半径を少し小さく
+    const areaRadii: { [key: number]: { x: number; y: number } } = {};
+
+    // 最大エリアサイズを取得してレイアウト計算
+    const maxProjectCount = Math.max(...Object.values(areaProjectCounts));
+    const maxAreaRadius = getAreaRadius(maxProjectCount);
+    const layoutRadiusX = dimensions.width * 0.275 + maxAreaRadius.x * 0.3;
+    const layoutRadiusY = dimensions.height * 0.15 + maxAreaRadius.y * 0.3;
 
     areas.forEach((area, i) => {
       const angle = (i * 2 * Math.PI) / areas.length;
-      const x = dimensions.width / 2 - 100 + Math.cos(angle) * areaRadiusX;
-      const y = dimensions.height / 2 + Math.sin(angle) * areaRadiusY;
+      const projectCount = areaProjectCounts[area.id];
+      const areaRadius = getAreaRadius(projectCount);
+
+      const x = dimensions.width / 2 - 50 + Math.cos(angle) * layoutRadiusX;
+      const y = dimensions.height / 2 + Math.sin(angle) * layoutRadiusY;
+
       areaCenters[area.id] = { x, y };
+      areaRadii[area.id] = areaRadius;
     });
 
     // プロジェクトごとのユーザー数をカウント
@@ -89,21 +116,25 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       projectUserCounts[user.projectId]++;
     });
 
-    // プロジェクトの中心位置を計算（エリア中心からの距離を1.5倍に）
+    // プロジェクトの中心位置を計算（エリアサイズに応じて調整）
     const projectCenters: { [key: number]: ProjectCenter } = {};
     const baseProjectRadius = dimensions.width * 0.06; // 基本サイズ
     const projectRadii: { [key: number]: number } = {}; // プロジェクトごとに大きさを保存
 
     projects.forEach((project) => {
       const areaCenter = areaCenters[project.areaId];
+      const areaRadius = areaRadii[project.areaId];
       const projectsInArea = projects.filter((p) => p.areaId === project.areaId);
       const projectIndex = projectsInArea.findIndex((p) => p.id === project.id);
 
       // 右上45度（π/4）から始めて、360度をプロジェクト数で割った角度で配置
       const angle = (projectIndex * 2 * Math.PI) / projectsInArea.length;
 
-      // エリア中心からの距離を0.5倍に増加
-      const distance = areaRadiusX * 0.5;
+      // プロジェクト数に応じて配置距離を動的に調整
+      const projectCount = projectsInArea.length;
+      // プロジェクト数が多いほど外側に配置（1個なら0.4倍、1つ増えるごとに0.2倍増加）
+      const distanceFactor = 0.4 + (projectCount - 1) * 0.2;
+      const distance = Math.min(areaRadius.x, areaRadius.y) * distanceFactor;
 
       const x = areaCenter.x + Math.cos(angle) * distance;
       const y = areaCenter.y + Math.sin(angle) * distance;
@@ -175,7 +206,7 @@ export default function Graph({ areas, projects, users }: GraphProps) {
         .attr('stop-opacity', 0);
     });
 
-    // エリアの円を描画
+    // エリアの円を描画（各エリアのサイズに応じて）
     svg
       .selectAll('.area-circle')
       .data(areas)
@@ -184,8 +215,8 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       .attr('class', 'area-circle')
       .attr('cx', (d) => areaCenters[d.id].x)
       .attr('cy', (d) => areaCenters[d.id].y)
-      .attr('rx', areaRadiusX)
-      .attr('ry', areaRadiusY)
+      .attr('rx', (d) => areaRadii[d.id].x)
+      .attr('ry', (d) => areaRadii[d.id].y)
       .attr('fill', (d) => `url(#area-gradient-${d.id})`)
       .attr('stroke', (d) => {
         const project = projects.find((p) => p.areaId === d.id);
@@ -195,21 +226,28 @@ export default function Graph({ areas, projects, users }: GraphProps) {
       .attr('stroke-dasharray', '5,5')
       .attr('stroke-opacity', 0.5);
 
-    // エリア名を表示
+    // エリア名を表示（左上に配置）
     svg
       .selectAll('.area-label')
       .data(areas)
       .enter()
       .append('g')
       .attr('class', 'area-label')
-      .attr('transform', (d) => `translate(${areaCenters[d.id].x}, ${areaCenters[d.id].y})`)
+      .attr('transform', (d) => {
+        const areaCenter = areaCenters[d.id];
+        const areaRadius = areaRadii[d.id];
+        // 左上の位置を計算（エリアの境界から少し内側）
+        const x = areaCenter.x - areaRadius.x + 20;
+        const y = areaCenter.y - areaRadius.y + 40;
+        return `translate(${x}, ${y})`;
+      })
       .each(function (d) {
         const g = d3.select(this);
 
         // エリア名のテキスト
         const text = g
           .append('text')
-          .attr('text-anchor', 'middle')
+          .attr('text-anchor', 'start')
           .attr('fill', '#334155')
           .attr('font-size', '24px')
           .attr('font-weight', 'bold')
